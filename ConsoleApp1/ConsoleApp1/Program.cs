@@ -6,6 +6,42 @@ using System.IO;
 using System.Globalization;
 namespace ConsoleApp1
 {
+    class TextWorker
+    {
+        public void ReadCSV(string[] rows)
+        {
+            string pathCSV = System.IO.Path.GetFullPath(@"data.CSV");
+            using (StreamReader stReader = new StreamReader(pathCSV, Encoding.GetEncoding(1251)))
+            {
+                rows = stReader.ReadToEnd().Split(rows, StringSplitOptions.RemoveEmptyEntries);
+            }
+        }
+        public void WriteReport(string[] rows,int[,] InfoGoods,double TotalSumm,double Costs)
+        {
+            string pathReport = System.IO.Path.GetFullPath(@"Report.txt");
+            using (StreamWriter stWriter = new StreamWriter(pathReport, false))
+            {
+                for(int counter = 1; counter<(rows.Length / 6); counter++)
+                {
+                    stWriter.WriteLine($"Товар{rows[counter * 6]}\nПродано {InfoGoods[counter-1,1]} штук\nЗакуплено {InfoGoods[counter - 1, 2]} штук");                   
+                }
+                stWriter.WriteLine($"Прибыль магазина  от продаж составила {Math.Round(TotalSumm - Costs,2)} руб");
+                stWriter.WriteLine($"Затраченные средства на дозакупку товара {Costs} руб");
+            }
+        }
+        public void WriteCSV(string[] rows)
+        {
+            string pathCSV = System.IO.Path.GetFullPath(@"data.CSV");
+            using (StreamWriter sw = new StreamWriter(pathCSV, false, Encoding.GetEncoding(1251)))
+            {
+                for (int i = 0; i < rows.Length; i++)
+                {
+                    sw.Write($"{rows[i]};");
+                }
+            }
+        }
+
+    }
     class Program
     {       
         public enum DaysWeek
@@ -19,25 +55,25 @@ namespace ConsoleApp1
             Sunday
         }
         static void Main(string[] args)
+        {           
+            double TotalSumm = 0, //Общая сумма заработанных деняк
+                Costs = 0; // Расходы на дозакупку товара            
+            string[] rows = { ";" };                        
+            TextWorker tm = new TextWorker();
+            tm.ReadCSV(rows);
+            int[,] InfoGoods = new int[(rows.Length / 6) - 1, 3];   // двумерный массив который будет хранить доп.информацию о товарах(кол-во покупок\закупок)
+            Days(ref InfoGoods,ref rows,ref TotalSumm,ref Costs);
+            tm.WriteReport(rows, InfoGoods, TotalSumm, Costs);
+            tm.WriteCSV(rows);
+        }
+        public static void Days(ref int[,] InfoGoods,ref string[] rows,ref double TotalSumm,ref double Costs)
         {
-            //нужно продумать возможность добавления в программу нового товара
             NumberFormatInfo nfi = new CultureInfo("ru-RU", false).NumberFormat;
             nfi.NumberDecimalSeparator = ".";
             DaysWeek today = new DaysWeek();
             today = DaysWeek.Monday;
             byte days = 1;
-            int hours = 8; // время открытия магазина в 8 часов            
-            double TotalSumm = 0, //Общая сумма заработанных деняк
-                Costs = 0; // Расходы на дозакупку товара
-            
-            string[] rows = { ";" };
-            string pathCSV = System.IO.Path.GetFullPath(@"data.CSV");
-            string pathReport = System.IO.Path.GetFullPath(@"Report.txt");
-            using (StreamReader stReader = new StreamReader(pathCSV,Encoding.GetEncoding(1251)))
-            {
-                rows = stReader.ReadToEnd().Split(rows, StringSplitOptions.RemoveEmptyEntries);                
-            }
-            int[,] InfoGoods = new int[(rows.Length / 6) - 1, 3];   // двумерный массив который будет хранить доп.информацию о товарах(кол-во покупок\закупок)
+            int hours = 8; // время открытия магазина в 8 часов
             while (days <= 30)
             {
                 Console.Clear();
@@ -45,27 +81,11 @@ namespace ConsoleApp1
                 {
                     TotalSumm += PurchaseInHour(hours, today, ref rows, ref InfoGoods, nfi);
                     hours++;
-                }              
+                }
                 Procurement(ref rows, ref InfoGoods, ref Costs, nfi);
                 hours = 8;
                 today++;
                 days++;
-            }
-            using (StreamWriter stWriter = new StreamWriter(pathReport, false))
-            {
-                for(int counter = 1; counter < (rows.Length / 6); counter++)
-                {
-                    stWriter.WriteLine($"Товар{rows[counter * 6]}\nПродано {InfoGoods[counter-1,1]} штук\nЗакуплено {InfoGoods[counter - 1, 2]} штук");                   
-                }
-                stWriter.WriteLine($"Прибыль магазина  от продаж составила {Math.Round(TotalSumm - Costs,2)} руб");
-                stWriter.WriteLine($"Затраченные средства на дозакупку товара {Costs} руб");
-            }
-            using (StreamWriter sw = new StreamWriter(pathCSV, false, Encoding.GetEncoding(1251)))
-            {
-                for (int i = 0; i < rows.Length; i++)
-                {
-                    sw.Write($"{rows[i]};");
-                }                
             }
         }
         public static void Procurement(ref string[] rows,ref int[,] InfoGoods,ref double Costs,NumberFormatInfo nfi)
