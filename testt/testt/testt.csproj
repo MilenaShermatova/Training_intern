@@ -54,8 +54,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Catalog.cs" />
+    <Compile Include="Purchase.cs" />
+    <Compile Include="WriteReport.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReadCSV.cs" />
+    <Compile Include="WriteCsv.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
