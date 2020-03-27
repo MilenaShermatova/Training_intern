@@ -5,3 +5,4 @@
 - the Report.txt file contains information about purchases and profits
 - Само задание по ссылке: http://www.cyberforum.ru/java/thread2062092.html
 # В папке test2 находится программа по нахождению площади фигур
+# В папке TripleSearchText находится программа по нахождению триплетов(ассинхронная)
