@@ -1,18 +1,19 @@
-п»їusing System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Threading;
+using System.Diagnostics;
 
 namespace TripleSearch
 {
 
     class Triple
     {
-        public string triplet;
-        public int count;
+        public string triplet { get; set; }
+        public int count { get; set; }
     }
     class ReadFile
     {
@@ -28,11 +29,11 @@ namespace TripleSearch
     {
         static void SortTriples(List<Triple> triples)
         {
-            for(int i = 0; i < triples.Count; i++)
+            for (int i = 0; i < triples.Count; i++)
             {
-                for(int j = 0; j < triples.Count; j++)
+                for (int j = 0; j < triples.Count; j++)
                 {
-                    if(triples[i].count > triples[j].count)
+                    if (triples[i].count > triples[j].count)
                     {
                         var buffer = triples[i];
                         triples[i] = triples[j];
@@ -40,10 +41,10 @@ namespace TripleSearch
                     }
                 }
             }
-            Console.WriteLine("РљРѕР»РёС‡РµСЃС‚РІРѕ С‚СЂРёРїР»РµС‚РѕРІ РЅР° РјРѕРјРµРЅС‚ РѕСЃС‚Р°РЅРѕРІРєРё - " + triples.Count);
+            Console.WriteLine("Количество триплетов на текущий момент - " + triples.Count);
             for (int i = 0; i < triples.Count; i++)
             {
-                if (i < 3)
+                if (i < 10)
                 {
                     Console.WriteLine(triples[i].triplet + " " + triples[i].count);
                 }
@@ -52,30 +53,31 @@ namespace TripleSearch
             }
         }
 
-        static async Task ProcessingTextAsync(string Text,List<Triple> triples)
+        static async Task ProcessingTextAsync(string Text, List<Triple> triples)
         {
-            DateTime dt = DateTime.Now;
-            await Task.Run(() => ProcessingText(Text,triples));
-            TimeSpan ts = DateTime.Now - dt;
-            Console.WriteLine($"РџРѕС‚РѕРє {Thread.CurrentThread.ThreadState} Р·Р°РІРµСЂС€РёР»СЃСЏ Р·Р° " + ts);
-            Console.WriteLine("РќР°Р¶РјРёС‚Рµ Р»СЋР±СѓСЋ РєРЅРѕРїРєСѓ РґР»СЏ Р·Р°РІРµСЂС€РµРЅРёСЏ РїСЂРѕРіСЂР°РјРјС‹");
+            Stopwatch sWatch = new Stopwatch();
+            sWatch.Start();
+            await Task.Run(() => ProcessingText(Text, triples));
+            sWatch.Stop();
+            Console.WriteLine($"Поток {Thread.CurrentThread.ThreadState} завершился за " + sWatch.ElapsedMilliseconds.ToString() + " миллисекунд");
+            Console.WriteLine("Нажмите любую кнопку для завершения программы");
         }
-        static void ProcessingText(string Text,List<Triple> triples)
+        static void ProcessingText(string Text, List<Triple> triples)
         {
-            // РїСѓР» СЃРёРјРІРѕР»РѕРІ РєРѕС‚РѕСЂС‹Рµ РЅРµ СѓС‡РёС‚С‹РІР°СЋС‚СЃСЏ РІ Р°РЅР°Р»РёР·Рµ РІРєР»СЋС‡Р°СЏ РїСЂРѕР±РµР» Рё РїРµСЂРµС…РѕРґ РЅР° СЃР»РµРґСѓСЋС‰СѓСЋ СЃС‚СЂРѕРєСѓ
+            // пул символов которые не учитываются в анализе включая пробел и переход на следующую строку
             char[] pool = new char[] { ' ', ',', '.', '/', '!', '(', ')', '?', '\n', '\r', ';', ':' };
             string CurrentTriplet;
 
-            /// РџРµСЂРµРјРµРЅРЅР°СЏ counter РЅСѓР¶РЅР° С‡С‚РѕР±С‹ РѕС‚СЃР»РµР¶РёРІР°С‚СЊ РјРµСЃС‚Рѕ РІ РєРѕС‚РѕСЂРѕРј РјС‹ РЅР°С€Р»Рё РїРµСЂРІС‹Р№ С‚СЂРёРїР»РµС‚.
-            /// Р”Р°Р»СЊРЅРµР№С€Р°СЏ РѕР±СЂР°Р±РѕС‚РєР° С‚РµРєСЃС‚Р° Р±СѓРґРµС‚ РЅР°С‡РёРЅР°С‚СЊСЃСЏ СЃ СЌС‚РѕРіРѕ РёРЅРґРµРєСЃР°.
+            /// Переменная counter нужна чтобы отслеживать место в котором мы нашли первый триплет.
+            /// Дальнейшая обработка текста будет начинаться с этого индекса.
             int counter = 0;
 
-            /// РС‰РµРј РїРµСЂРІС‹Р№ С‚СЂРёРїР»РµС‚
-            /// РџРѕСЃРёРјРІРѕР»СЊРЅРѕ РґРѕР±Р°РІР»СЏРµРј СЌР»РµРјРµРЅС‚С‹ РїРѕРєР° РґР»РёРЅР° РЅРµ Р±СѓРґРµС‚ СЂР°РІРЅР° 3  
+            /// Ищем первый триплет
+            /// Посимвольно добавляем элементы пока длина не будет равна 3  
             try
             {
                 Triple buff = new Triple() { triplet = "", count = 1 };
-                // РџРѕРєР° РІ РїРµСЂРІС‹Р№ С‚СЂРёРїР»РµС‚ РЅРµ РїРѕРїР°РґРµС‚ С‚СЂРё РґРѕРїСѓСЃС‚РёРјС‹С… СЃРёРјРІРѕР»Р°
+                // Пока в первый триплет не попадет три допустимых символа
                 while (buff.triplet.Length < 3)
                 {
                     if (!pool.Contains(Text[counter]))
@@ -86,25 +88,25 @@ namespace TripleSearch
             }
             catch (IndexOutOfRangeException)
             {
-                Console.WriteLine("РўРµРєСЃС‚ РЅРµ СЃРѕРґРµСЂР¶РёС‚ С‚СЂРёРїР»РµС‚РѕРІ");
+                Console.WriteLine("Текст не содержит триплетов");
                 return;
             }
 
             for (; counter < Text.Length; counter++)
             {
-                // Р•СЃР»Рё РІ С‚РµРєСЃС‚Рµ(С‚РµРєСѓС‰РµРј С‚СЂРёРїР»РµС‚Рµ) РЅР°С…РѕРґСЏС‚СЃСЏ СЃРїРµС† СЃРёРјРІРѕР»С‹, С‚Рѕ РїСЂРѕРїСѓСЃРєР°РµРј СЌС‚РѕС‚ С‚СЂРёРїР»РµС‚
+                // Если в тексте(текущем триплете) находятся спец символы, то пропускаем этот триплет
                 if (pool.Contains(Text[counter]) || pool.Contains(Text[counter - 1]) || pool.Contains(Text[counter - 2]))
                 {
                     continue;
                 }
                 CurrentTriplet = ("" + Text[counter - 2] + Text[counter - 1] + Text[counter]);
-                // Р•СЃР»Рё С‚Р°РєРѕРіРѕ С‚СЂРёРїР»РµС‚Р° РµС‰Рµ РЅРµС‚, С‚Рѕ СЃРѕР·РґР°С‚СЊ
+                // Если такого триплета еще нет, то создать
                 if (!triples.Exists(x => (x.triplet == CurrentTriplet)))
                 {
                     var buff = new Triple() { triplet = CurrentTriplet, count = 1 };
                     triples.Add(buff);
                 }
-                // РРЅР°С‡Рµ РЅР°Р№С‚Рё РїРѕС…РѕР¶РёР№ С‚СЂРёРїР»РµС‚ Рё СѓРІРµР»РёС‡РёС‚СЊ СЃС‡РµС‚С‡РёРє РЅР° 1
+                // Иначе найти похожий триплет и увеличить счетчик на 1
                 else
                 {
                     for (int j = 0; j < triples.Count; j++)
@@ -115,33 +117,32 @@ namespace TripleSearch
                         }
                     }
                 }
+                // Эмуляция долгой работы
                 Thread.Sleep(1000);
             }
-            foreach (Triple tr in triples)
-            {
-                Console.WriteLine(tr.triplet + " " + tr.count);
-            }
+            SortTriples(triples);
         }
         static void Main(string[] args)
         {
 
             string path = Path.GetFullPath("text.txt");
             string Text = null;
-            DateTime dt = DateTime.Now;
+            Stopwatch sWatch = new Stopwatch();
+            sWatch.Start();
             new ReadFile(out Text, path);
 
             List<Triple> triples = new List<Triple>();
-            Task task = ProcessingTextAsync(Text,triples);
+            Task task = ProcessingTextAsync(Text, triples);
 
             ConsoleKeyInfo cki = new ConsoleKeyInfo();
 
-            // Р¦РёРєР» РѕР¶РёРґР°РЅРёСЏ РІРІРѕРґР° РїРѕР»СЊР·РѕРІР°С‚РµР»РµРј
+            // Цикл ожидания ввода пользователем
             while (true)
             {
                 if (Console.KeyAvailable == true)
                 {
                     cki = Console.ReadKey(true);
-                    // Р•СЃР»Рё cki СЃС‡РёС‚Р°Р» РЅР°Р¶Р°С‚РёРµ Рё РЅРµ СЂР°РІРµРЅ РїСѓСЃС‚РѕРјСѓ РѕР±СЊРµРєС‚Сѓ
+                    // Если cki считал нажатие и не равен пустому обьекту
                     if (!cki.Equals(new ConsoleKeyInfo()))
                     {
                         if (!task.IsCompleted)
@@ -152,9 +153,8 @@ namespace TripleSearch
                     }
                 }
             }
-
-            TimeSpan ts = DateTime.Now - dt;
-            Console.WriteLine("РћСЃРЅРѕРІРЅРѕР№ РїРѕС‚РѕРє Р·Р°РІРµСЂС€РёР»СЃСЏ Р·Р° " + ts);
+            sWatch.Stop();
+            Console.WriteLine("Основной поток завершился за " + sWatch.ElapsedMilliseconds.ToString() + " миллисекунд");
             Console.ReadKey(true);
         }
     }

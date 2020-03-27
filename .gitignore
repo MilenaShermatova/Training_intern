@@ -1,0 +1,16 @@
+#
+/TripletSearchText/TripleSearch/obj
+/TripletSearchText/TripleSearch/bin/Debug/*
+!/TripletSearchText/TripleSearch/bin/Debug/*.txt
+/TripletSearchText/TripleSearch/*.config
+/TripletSearchText/TripleSearch/Properties
+/TripletSearchText/TripleSearch/*.csproj
+/TripletSearchText/*.sln
+/TripletSearchText/*vs
+
+#
+
+/test2/.vs
+/test2/*.sln
+/test2/AreaShape/*
+!/test2/AreaShape/*.cs
